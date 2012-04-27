@@ -1,15 +1,12 @@
 const int stepdelay = 3; // in ms
-long laststep;
-int curstep;
+unsigned long laststep; // ms since last step
+int servostate;
 
 const int gopin = 12;
-const int dirpin = 11;
 
 const int phase1 = 7;
 const int phase2 = 8;
 const int phase3 = 9;
-#define OUTL(pin) digitalWrite(pin, LOW);
-#define OUTH(pin) digitalWrite(pin, HIGH);
 
 // potentiometer and the limit switches
 // pot is on an analog pin, the switches on dig. pins
@@ -19,21 +16,18 @@ int neg90 = 207;
 int pos90 = 793;
 const int llimpin = 2;
 const int rlimpin = 4;
-int lastpos, targetpos;
+int lastpos, targetpos; // angles
 
 void setup(){
   pinMode(phase1, OUTPUT);
-  OUTL(phase1);
   pinMode(phase2, OUTPUT);
-  OUTL(phase2);
   pinMode(phase3, OUTPUT);
-  OUTL(phase3);
-  
+  servo(LOW, LOW, LOW);
+
   laststep = millis();
-  curstep = 0;
+  servostate = 0;
 
   init_din(gopin);
-  init_din(dirpin);
   init_din(llimpin);
   init_din(rlimpin);
 
@@ -44,7 +38,7 @@ void setup(){
   lastpos = targetpos = angle();
 
   Serial.begin(115200);
-  Serial.write("Alive.\n");
+  Serial.println("Alive.");
 }
 
 void init_din(int pin){
@@ -52,8 +46,16 @@ void init_din(int pin){
     digitalWrite(pin, HIGH);
 }
 
+void servo(uint8_t ph1, uint8_t ph2, uint8_t ph3){
+  digitalWrite(phase1, ph1);
+  digitalWrite(phase2, ph2);
+  digitalWrite(phase3, ph3);
+}
+
 void loop(){
   if(Serial.available() > 0){
+    // read in the command, one char at a time
+    // TODO: this could be much better
     char incmd[17] = "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0";
     int i = 0;
     while((Serial.available() > 0) && (Serial.peek() != ';') && (i < 16)){
@@ -70,26 +72,29 @@ void loop(){
     return;
   }
 
+  // skip if we haven't had time to settle from the last step
   if(millis() - laststep < stepdelay)
     return;
+  // or just shouldn't go anywhere
   if(digitalRead(gopin) == HIGH)
     return;
 
   int pos = angle();
-  if(abs(pos - targetpos) >= 2 && digitalRead(gopin) == LOW){
-    curstep = (pos > targetpos)? stepL(curstep) : stepR(curstep);
+  if(abs(pos - targetpos) >= 2){
+    servostate = (pos > targetpos)? stepL(servostate) : stepR(servostate);
     laststep = millis();
   }
   else if(millis() - laststep > 200){
-    OUTL(phase1);
-    OUTL(phase2);
-    OUTL(phase3);
+    // give the setup 0.2s to absorb the momentum, then turn off the servo so
+    // that we're not driving it too much.
+    servo(LOW, LOW, LOW);
   }
 }
 
 void runcmd(char *cmd){
   String cmdstr = String(cmd);
   cmdstr.toUpperCase();
+
   if(cmdstr.startsWith("CAL")){
     calibrate();
   }
@@ -130,8 +135,6 @@ void ser_error(String *cmd){
   Serial.print(bad_cmd);
 }
 
-
-
 int angle(){
   int pot = analogRead(potpin);
   return((((long)(pot - neg90) * 180) / (pos90 - neg90)) - 90);
@@ -146,44 +149,32 @@ int stepR(int from){
 }
 
 int stepto(int pos){
+  // keep pos limited to [0,5]
   if(pos < 0)
     pos = 6 - (abs(pos) % 6);
   pos = pos % 6;
+
   switch(pos){
     case(0):
-      OUTL(phase1);
-      OUTL(phase2);
-      OUTH(phase3);
+      servo(LOW, LOW, HIGH);
       break;
     case(1):
-      OUTL(phase1);
-      OUTH(phase2);
-      OUTH(phase3);
+      servo(LOW, HIGH, HIGH);
       break;
     case(2):
-      OUTL(phase1);
-      OUTH(phase2);
-      OUTL(phase3);
+      servo(LOW, HIGH, LOW);
       break;
     case(3):
-      OUTH(phase1);
-      OUTH(phase2);
-      OUTL(phase3);
+      servo(HIGH, HIGH, LOW);
       break;
     case(4):
-      OUTH(phase1);
-      OUTL(phase2);
-      OUTL(phase3);
+      servo(HIGH, LOW, HIGH);
       break;
     case(5):
-      OUTH(phase1);
-      OUTL(phase2);
-      OUTH(phase3);
+      servo(HIGH, LOW, HIGH);
       break;
     default:
-      OUTL(phase1);
-      OUTL(phase2);
-      OUTL(phase3);
+      servo(LOW, LOW, LOW);
   }
   return(pos);
 }
