@@ -1,4 +1,4 @@
-const int stepdelay = 5; // in ms
+const int stepdelay = 3; // in ms
 long laststep;
 int curstep;
 
@@ -8,10 +8,8 @@ const int dirpin = 11;
 const int phase1 = 7;
 const int phase2 = 8;
 const int phase3 = 9;
-// make some tri-state outputs
-#define OUTZ(pin) pinMode(pin, INPUT); digitalWrite(pin, LOW);
-#define OUTL(pin) pinMode(pin, OUTPUT); digitalWrite(pin, LOW);
-#define OUTH(pin) pinMode(pin, OUTPUT); digitalWrite(pin, HIGH);
+#define OUTL(pin) digitalWrite(pin, LOW);
+#define OUTH(pin) digitalWrite(pin, HIGH);
 
 // potentiometer and the limit switches
 // pot is on an analog pin, the switches on dig. pins
@@ -21,13 +19,16 @@ int neg90 = 207;
 int pos90 = 793;
 const int llimpin = 2;
 const int rlimpin = 4;
-unsigned int lastpos = 0;
+int lastpos, targetpos;
 
 void setup(){
-  OUTZ(phase1);
-  OUTZ(phase2);
-  OUTZ(phase3);
-
+  pinMode(phase1, OUTPUT);
+  OUTL(phase1);
+  pinMode(phase2, OUTPUT);
+  OUTL(phase2);
+  pinMode(phase3, OUTPUT);
+  OUTL(phase3);
+  
   laststep = millis();
   curstep = 0;
 
@@ -35,10 +36,12 @@ void setup(){
   init_din(dirpin);
   init_din(llimpin);
   init_din(rlimpin);
-  
+
   // TODO tie A5 here to potpin
   pinMode(A5, INPUT);
   digitalWrite(A5, LOW);
+
+  lastpos = targetpos = angle();
 
   Serial.begin(115200);
   Serial.write("Alive.\n");
@@ -72,8 +75,16 @@ void loop(){
   if(digitalRead(gopin) == HIGH)
     return;
 
-  curstep = (digitalRead(dirpin) == HIGH)? stepL(curstep) : stepR(curstep);
-  laststep = millis();
+  int pos = angle();
+  if(abs(pos - targetpos) >= 2 && digitalRead(gopin) == LOW){
+    curstep = (pos > targetpos)? stepL(curstep) : stepR(curstep);
+    laststep = millis();
+  }
+  else if(millis() - laststep > 200){
+    OUTL(phase1);
+    OUTL(phase2);
+    OUTL(phase3);
+  }
 }
 
 void runcmd(char *cmd){
@@ -107,8 +118,10 @@ void set_angle(String *cmd){
   String moveto = (*cmd).substring((*cmd).indexOf(' ') + 1);
   char buff[18];
   (String("Moving to ") + moveto).toCharArray(buff, 18);
-  
   Serial.println(buff);
+
+  moveto.toCharArray(buff, 18);
+  targetpos = atoi(buff);
 }
 
 void ser_error(String *cmd){
@@ -125,54 +138,52 @@ int angle(){
 }
 
 int stepL(int from){
-  int to = (from + 1) % 6;
-  stepto(to);
-  return(to);
+  return(stepto(from + 1));
 }
 
 int stepR(int from){
-  int to = from - 1;
-  if(to < 0)
-    to = 5;
-  stepto(to);
-  return(to);
+  return(stepto(from - 1));
 }
 
-void stepto(int pos){
+int stepto(int pos){
+  if(pos < 0)
+    pos = 6 - (abs(pos) % 6);
+  pos = pos % 6;
   switch(pos){
-    case 0:
-      OUTH(phase1);
-      OUTZ(phase2);
-      OUTL(phase3);
-      break;
-    case 1:
-      OUTH(phase1);
-      OUTL(phase2);
-      OUTZ(phase3);
-      break;
-    case 2:
-      OUTZ(phase1);
+    case(0):
+      OUTL(phase1);
       OUTL(phase2);
       OUTH(phase3);
       break;
-    case 3:
+    case(1):
       OUTL(phase1);
-      OUTZ(phase2);
+      OUTH(phase2);
       OUTH(phase3);
       break;
-    case 4:
+    case(2):
       OUTL(phase1);
       OUTH(phase2);
-      OUTZ(phase3);
+      OUTL(phase3);
       break;
-    case 5:
-      OUTZ(phase1);
+    case(3):
+      OUTH(phase1);
       OUTH(phase2);
       OUTL(phase3);
+      break;
+    case(4):
+      OUTH(phase1);
+      OUTL(phase2);
+      OUTL(phase3);
+      break;
+    case(5):
+      OUTH(phase1);
+      OUTL(phase2);
+      OUTH(phase3);
       break;
     default:
-      OUTZ(phase1);
-      OUTZ(phase2);
-      OUTZ(phase3);
+      OUTL(phase1);
+      OUTL(phase2);
+      OUTL(phase3);
   }
+  return(pos);
 }
