@@ -124,6 +124,8 @@ void calibrate(){
   }
   neg90 = analogRead(potpin);
   pos90 = temp_pos90;
+  // don't want to turn back to wherever we were before the cal started
+  targetpos = -90;
   Serial.println("Calibration complete.");
   return;
 }
@@ -165,9 +167,10 @@ void set_angle(String *cmd){
 }
 
 void ser_error(String *cmd){
-  char bad_cmd[22 + 16];
-  (String("Unrecognized command: ") + (*cmd) + "\n").toCharArray(bad_cmd, 22 + 16);
-  Serial.print(bad_cmd);
+  char bad_cmd[CMDLEN];
+  (*cmd).toCharArray(bad_cmd, CMDLEN);
+  Serial.print("Unrecognized command: ");
+  Serial.println(bad_cmd);
 }
 
 int angle(){
