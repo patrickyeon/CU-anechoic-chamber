@@ -14,8 +14,8 @@ const int potpin = 5;
 // pot readings at +/- 90 degrees
 int neg90 = 207;
 int pos90 = 793;
-const int llimpin = 2;
-const int rlimpin = 4;
+const int limleft = 2;
+const int limright = 4;
 int lastpos, targetpos; // angles
 
 void setup(){
@@ -28,8 +28,8 @@ void setup(){
   servostate = 0;
 
   init_din(gopin);
-  init_din(llimpin);
-  init_din(rlimpin);
+  init_din(limleft);
+  init_din(limright);
 
   // TODO tie A5 here to potpin
   pinMode(A5, INPUT);
@@ -81,7 +81,7 @@ void loop(){
 
   int pos = angle();
   if(abs(pos - targetpos) >= 2){
-    servostate = (pos > targetpos)? stepL(servostate) : stepR(servostate);
+    servostate = step(servostate, targetpos - pos);
     laststep = millis();
   }
   else if(millis() - laststep > 200){
@@ -140,12 +140,19 @@ int angle(){
   return((((long)(pot - neg90) * 180) / (pos90 - neg90)) - 90);
 }
 
-int stepL(int from){
-  return(stepto(from + 1));
-}
-
-int stepR(int from){
-  return(stepto(from - 1));
+int step(int from, int dir){
+  if(dir > 0 && digitalRead(limright) == LOW){
+    return(stepto(from - 1));
+  }
+  else if(dir < 0 && digitalRead(limleft) == LOW){
+    return(stepto(from + 1));
+  }
+  else if(dir != 0){
+    // we've hit a limiter switch
+    targetpos = angle();
+    Serial.println("Limited!");
+  }
+  return(from);
 }
 
 int stepto(int pos){
