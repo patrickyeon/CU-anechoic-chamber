@@ -1,4 +1,4 @@
-const int stepdelay = 3; // in ms
+int stepdelay = 5; // in ms
 unsigned long laststep; // ms since last step
 int servostate;
 
@@ -17,6 +17,10 @@ int pos90 = 793;
 const int limleft = 2;
 const int limright = 4;
 int lastpos, targetpos; // angles
+
+#define CMDLEN 33
+char cmdbuff[CMDLEN];
+int cmd_i;
 
 void setup(){
   pinMode(phase1, OUTPUT);
@@ -37,6 +41,11 @@ void setup(){
 
   lastpos = targetpos = angle();
 
+  for(cmd_i = 0; cmd_i < CMDLEN; cmd_i++){
+    cmdbuff[cmd_i] = '\0';
+  }
+  cmd_i = 0;
+
   Serial.begin(115200);
   Serial.println("Alive.");
 }
@@ -53,23 +62,15 @@ void servo(uint8_t ph1, uint8_t ph2, uint8_t ph3){
 }
 
 void loop(){
-  if(Serial.available() > 0){
-    // read in the command, one char at a time
-    // TODO: this could be much better
-    char incmd[17] = "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0";
-    int i = 0;
-    while((Serial.available() > 0) && (Serial.peek() != ';') && (i < 16)){
-      incmd[i++] = (char)Serial.read();
-      if(Serial.available() == 0)
-        delay(10);
+  // read in the command, one char at a time
+  while((Serial.available() > 0) && (cmd_i < CMDLEN)){
+    cmdbuff[cmd_i++] = (char)Serial.read();
+    if(cmdbuff[cmd_i - 1] == ';'){
+      // received a whole phrase
+      cmdbuff[cmd_i] = '\0';
+      runcmd(cmdbuff);
+      cmd_i = 0;
     }
-    if(Serial.peek() == ';'){
-      // if it's not, they sent us a command that's too long
-      Serial.read();
-      incmd[i] = '\0';
-      runcmd(incmd);
-    }
-    return;
   }
 
   // skip if we haven't had time to settle from the last step
@@ -110,22 +111,56 @@ void runcmd(char *cmd){
 }
 
 void calibrate(){
-  Serial.print("Start calibration.");
+  Serial.println("Move to +90 degrees and type OK;");
+  if(wait_ok() != 0){
+    Serial.println("Calibration canceled.");
+    return;
+  }
+  int temp_pos90 = analogRead(potpin);
+  Serial.println("Move to -90 degrees and type OK;");
+  if(wait_ok() != 0){
+    Serial.println("Calibration canceled.");
+    return;
+  }
+  neg90 = analogRead(potpin);
+  pos90 = temp_pos90;
+  Serial.println("Calibration complete.");
+  return;
+}
+
+int wait_ok(){
+  // clear out the serial buffer first
+  while(Serial.available() > 0){
+    Serial.read();
+  }
+  char upperok[4] = "OK;";
+  char lowerok[4] = "ok;";
+  int i = 0;
+  while(i < 3){
+    if(Serial.available() > 0){
+      char c = Serial.read();
+      if(c != upperok[i] && c != lowerok[i])
+        return(-1);
+      i++;
+    }
+  }
+  return(0);
 }
 
 void read_angle(){
   int ang = angle();
-  Serial.print("Angle: ");
+  //Serial.print("Angle: ");
   Serial.println(ang);
 }
 
 void set_angle(String *cmd){
+  if((*cmd).indexOf(' ') < 0)
+    ser_error(cmd);
+
   String moveto = (*cmd).substring((*cmd).indexOf(' ') + 1);
   char buff[18];
-  (String("Moving to ") + moveto).toCharArray(buff, 18);
-  Serial.println(buff);
-
   moveto.toCharArray(buff, 18);
+
   targetpos = atoi(buff);
 }
 
