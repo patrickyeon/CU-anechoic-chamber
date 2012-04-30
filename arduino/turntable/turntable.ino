@@ -1,6 +1,7 @@
 int stepdelay = 5; // in ms
 unsigned long laststep; // ms since last step
 int servostate;
+int alerted = 1;
 
 const int gopin = 12;
 
@@ -89,12 +90,18 @@ void loop(){
     // give the setup 0.2s to absorb the momentum, then turn off the servo so
     // that we're not driving it too much.
     servo(LOW, LOW, LOW);
+    if(alerted == 0){
+      Serial.println(angle());
+      Serial.flush();
+      alerted = 1;
+    }
   }
 }
 
 void runcmd(char *cmd){
   String cmdstr = String(cmd);
   cmdstr.toUpperCase();
+  cmdstr.trim();
 
   if(cmdstr.startsWith("CAL")){
     calibrate();
@@ -102,8 +109,11 @@ void runcmd(char *cmd){
   else if(cmdstr.startsWith("GET")){
     read_angle();
   }
-  else if(cmdstr.startsWith("SET")){
+  else if(cmdstr.startsWith("TURN")){
     set_angle(&cmdstr);
+  }
+  else if(cmdstr.startsWith("SET")){
+    set_vals(&cmdstr);
   }
   else{
     ser_error(&cmdstr);
@@ -114,19 +124,23 @@ void calibrate(){
   Serial.println("Move to +90 degrees and type OK;");
   if(wait_ok() != 0){
     Serial.println("Calibration canceled.");
+    Serial.flush();
     return;
   }
   int temp_pos90 = analogRead(potpin);
   Serial.println("Move to -90 degrees and type OK;");
   if(wait_ok() != 0){
     Serial.println("Calibration canceled.");
+    Serial.flush();
     return;
   }
   neg90 = analogRead(potpin);
   pos90 = temp_pos90;
   // don't want to turn back to wherever we were before the cal started
   targetpos = -90;
-  Serial.println("Calibration complete.");
+  Serial.println(neg90);
+  Serial.println(pos90);
+  Serial.flush();
   return;
 }
 
@@ -149,6 +163,30 @@ int wait_ok(){
   return(0);
 }
 
+void set_vals(String *cmd){
+  int cmd_end = (*cmd).indexOf(' ');
+  if(cmd_end < 0)
+    ser_error(cmd);
+  int sub_end = (*cmd).indexOf(' ', cmd_end + 1);
+  if(sub_end <= 0)
+    ser_error(cmd);
+
+  String sub = (*cmd).substring(cmd_end + 1, sub_end);
+  sub.toUpperCase();
+  char buff[8];
+  (*cmd).substring(sub_end + 1).toCharArray(buff, 8);
+  int val = atoi(buff);
+
+  if(sub.equals("POS"))
+    pos90 = val;
+  else if(sub.equals("NEG"))
+    neg90 = val;
+  else if(sub.equals("DELAY"))
+    stepdelay = val;
+  else
+    ser_error(cmd);
+}
+
 void read_angle(){
   int ang = angle();
   //Serial.print("Angle: ");
@@ -164,6 +202,7 @@ void set_angle(String *cmd){
   moveto.toCharArray(buff, 18);
 
   targetpos = atoi(buff);
+  alerted = 0;
 }
 
 void ser_error(String *cmd){
@@ -188,7 +227,7 @@ int step(int from, int dir){
   else if(dir != 0){
     // we've hit a limiter switch
     targetpos = angle();
-    Serial.println("Limited!");
+    //Serial.println("Limited!");
   }
   return(from);
 }
