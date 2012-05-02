@@ -2,6 +2,7 @@ int stepdelay = 5; // in ms
 unsigned long laststep; // ms since last step
 int servostate;
 int alerted = 1;
+int badcmdlen = 0;
 
 const int gopin = 12;
 
@@ -76,6 +77,11 @@ void loop(){
       cmd_i = 0;
     }
   }
+  if(cmd_i == CMDLEN){
+    cmd_i = 0;
+    // signal so that we can send len error
+    badcmdlen = 1;
+  }
   // TODO deal with command when it is longer than CMDLEN
 
   // skip if we haven't had time to settle from the last step
@@ -111,7 +117,10 @@ void runcmd(char *cmd){
   cmdstr.toUpperCase();
   cmdstr.trim();
 
-  if(cmdstr.startsWith("CAL")){
+  if (badcmdlen != 0){
+    ser_too_long();
+  }
+  else if(cmdstr.startsWith("CAL")){
     calibrate();
   }
   else if(cmdstr.startsWith("GET")){
@@ -225,6 +234,11 @@ void ser_error(String *cmd){
   (*cmd).toCharArray(bad_cmd, CMDLEN);
   Serial.print("Unrecognized command: ");
   Serial.println(bad_cmd);
+}
+
+void ser_too_long(){
+  Serial.println("Commands cannot be longer than 32 characters.");
+  badcmdlen = 0;
 }
 
 int angle(){
