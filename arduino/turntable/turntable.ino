@@ -17,6 +17,7 @@ int neg90 = 207;
 int pos90 = 793;
 const int limleft = 2;
 const int limright = 4;
+
 int lastpos, targetpos; // angles
 
 #define CMDLEN 33
@@ -52,11 +53,13 @@ void setup(){
 }
 
 void init_din(int pin){
-    pinMode(pin, INPUT);
-    digitalWrite(pin, HIGH);
+  // initialize a digital input pin
+  pinMode(pin, INPUT);
+  digitalWrite(pin, HIGH);
 }
 
 void servo(uint8_t ph1, uint8_t ph2, uint8_t ph3){
+  // servo control
   digitalWrite(phase1, ph1);
   digitalWrite(phase2, ph2);
   digitalWrite(phase3, ph3);
@@ -73,6 +76,7 @@ void loop(){
       cmd_i = 0;
     }
   }
+  // TODO deal with command when it is longer than CMDLEN
 
   // skip if we haven't had time to settle from the last step
   if(millis() - laststep < stepdelay)
@@ -83,6 +87,7 @@ void loop(){
 
   int pos = angle();
   if(abs(pos - targetpos) >= 2){
+    // accurate to +/- 1 degree, (+/- whatever the pot accuracy is)
     servostate = step(servostate, targetpos - pos);
     laststep = millis();
   }
@@ -90,6 +95,8 @@ void loop(){
     // give the setup 0.2s to absorb the momentum, then turn off the servo so
     // that we're not driving it too much.
     servo(LOW, LOW, LOW);
+    // if we haven't notified the user yet, let them know where we've turned
+    // to, and wait for them to read that data before doing anything more
     if(alerted == 0){
       Serial.println(angle());
       Serial.flush();
@@ -100,6 +107,7 @@ void loop(){
 
 void runcmd(char *cmd){
   String cmdstr = String(cmd);
+  // case-sensitive commands are a pain
   cmdstr.toUpperCase();
   cmdstr.trim();
 
@@ -127,6 +135,7 @@ void calibrate(){
     Serial.flush();
     return;
   }
+  // don't want to save it right away, in case the user cancels out
   int temp_pos90 = analogRead(potpin);
   Serial.println("Move to -90 degrees and type OK;");
   if(wait_ok() != 0){
@@ -140,6 +149,7 @@ void calibrate(){
   targetpos = -90;
   Serial.println(neg90);
   Serial.println(pos90);
+  // make sure the user reads the values before we move on
   Serial.flush();
   return;
 }
@@ -164,11 +174,14 @@ int wait_ok(){
 }
 
 void set_vals(String *cmd){
+  // these have the form "SET SUBCOMMAND value;"
   int cmd_end = (*cmd).indexOf(' ');
   if(cmd_end < 0)
+    // no subcommand
     ser_error(cmd);
   int sub_end = (*cmd).indexOf(' ', cmd_end + 1);
   if(sub_end <= 0)
+    // no value after the subcommand
     ser_error(cmd);
 
   String sub = (*cmd).substring(cmd_end + 1, sub_end);
@@ -188,13 +201,12 @@ void set_vals(String *cmd){
 }
 
 void read_angle(){
-  int ang = angle();
-  //Serial.print("Angle: ");
-  Serial.println(ang);
+  Serial.println(angle());
 }
 
 void set_angle(String *cmd){
   if((*cmd).indexOf(' ') < 0)
+    // didn't give us an angle to set
     ser_error(cmd);
 
   String moveto = (*cmd).substring((*cmd).indexOf(' ') + 1);
@@ -202,10 +214,13 @@ void set_angle(String *cmd){
   moveto.toCharArray(buff, 18);
 
   targetpos = atoi(buff);
+  // clear alerted so that we will tell the user when it's done moving
   alerted = 0;
 }
 
 void ser_error(String *cmd){
+  // TODO send a special code, so that the user can know to clear the buffer
+  // right out?
   char bad_cmd[CMDLEN];
   (*cmd).toCharArray(bad_cmd, CMDLEN);
   Serial.print("Unrecognized command: ");
@@ -213,11 +228,13 @@ void ser_error(String *cmd){
 }
 
 int angle(){
+  // read the pot value, and calculate the angle that represents
   int pot = analogRead(potpin);
   return((((long)(pot - neg90) * 180) / (pos90 - neg90)) - 90);
 }
 
 int step(int from, int dir){
+  // from is the current servostate
   if(dir > 0 && digitalRead(limright) == LOW){
     return(stepto(from - 1));
   }
@@ -227,7 +244,6 @@ int step(int from, int dir){
   else if(dir != 0){
     // we've hit a limiter switch
     targetpos = angle();
-    //Serial.println("Limited!");
   }
   return(from);
 }
@@ -258,6 +274,7 @@ int stepto(int pos){
       servo(HIGH, LOW, HIGH);
       break;
     default:
+      // really should not be able to happen
       servo(LOW, LOW, LOW);
   }
   return(pos);
