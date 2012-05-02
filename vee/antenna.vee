@@ -1,0 +1,837 @@
+(saveFormat "7.0")
+(date "Wed 02/May/2012 13:42:47 ")
+(veerev "9.2.13522.0")
+(platform "PC")
+(execMode v6)
+(prefExecMode v9)
+(filterNAN 0)
+(workspaceStackingOrder M)
+(sysconfig
+(iodevice "HP4145A"
+(type GPIB-VISA)
+(channel 130)
+(readTerm "\n")
+(fs ",")
+(eol "\n")
+(multiField dataOnly)
+(arrayFormat linear)
+(timeout 5)
+(byteOrder 0)
+(ppAddr "GPIB0::17::INSTR")
+(model "")
+(eoiEnabled 1)
+(VISAddr "GPIB0::17::INSTR")
+(model ""
+(standard 488)))
+(iodevice "newInstrument"
+(type GPIB-VISA)
+(channel 130)
+(readTerm "\n")
+(fs ",")
+(eol "\n")
+(multiField dataOnly)
+(arrayFormat linear)
+(timeout 5)
+(byteOrder 0)
+(idn "he8720a")
+(ppAddr "GPIB0::16::INSTR")
+(ScpiFileName "he8720a.xml")
+(model "he8720a")
+(eoiEnabled 1)
+(VISAddr "GPIB0::16::INSTR")
+(model "he8720a"
+(standard 488)))
+(iodevice "newInstrument3"
+(type ASRL)
+(channel 196)
+(readTerm "\n")
+(fs ",")
+(eol "\n")
+(multiField dataOnly)
+(arrayFormat linear)
+(timeout 15)
+(byteOrder 0)
+(ppAddr "ASRL6::INSTR")
+(model "")
+(eoiEnabled 1)
+(VISAlias "COM6")
+(VISAddr "ASRL6::INSTR")
+(model ""
+(standard 488.2))
+(baudRate 115200)
+(charSize 8)
+(stopBits 1)
+(parity off)
+(handshake off)
+(recvBufferSize 4096))
+(iodevice "newInstrument2"
+(type ASRL)
+(channel 192)
+(readTerm "\n")
+(fs ",")
+(eol "\n")
+(multiField dataOnly)
+(arrayFormat linear)
+(timeout 5)
+(byteOrder 0)
+(ppAddr "ASRL2::INSTR")
+(model "")
+(eoiEnabled 1)
+(VISAlias "COM2")
+(VISAddr "ASRL2::INSTR")
+(model ""
+(standard 488.2))
+(baudRate 9600)
+(charSize 8)
+(stopBits 1)
+(parity off)
+(handshake off)
+(recvBufferSize 4096)))
+(SaveCF no)
+(device 0 ROOTCONTEXT
+(properties
+(variableName Main)
+(variableScope glob)
+(trigMode deg)
+(nextID 80)
+(popupTitleText "Untitled")
+(popupMoveable 1))
+(deviceList
+(device 7 START25
+(properties
+(variableScope cont)))
+(device 8 IODEVICE
+(properties
+(name "newInstrument (he8720a @GPIB0::16::INSTR)")
+(variableScope cont)
+(transactions 5 "WRITE TEXT \"PRES;\" EOL" "WRITE TEXT \"FORM4;\" EOL"
+"WRITE TEXT \"CHAN1; S21; LOGM;\" EOL" "WRITE TEXT \"CHAN2; S21; PHAS;\" EOL"
+"WRITE TEXT \"DUACON\" EOL"))
+(implementation
+(ioDevType 13)
+(iopath "newInstrument")))
+(device 9 IODEVICE
+(properties
+(name "newInstrument (he8720a @GPIB0::16::INSTR)")
+(variableScope cont)
+(transactions 2 "WRITE TEXT \"STAR\", start, \"GHZ;\" EOL"
+"WRITE TEXT \"STOP\", stop, \"GHZ;\" EOL"))
+(interface
+(input 1
+(name "start")
+(optional yes))
+(input 2
+(name "stop")
+(optional yes)))
+(implementation
+(ioDevType 13)
+(iopath "newInstrument")))
+(device 10 CONSTANT
+(properties
+(name "Start Frequency")
+(variableScope cont)
+(enableEditing 1))
+(interface
+(output 1
+(name "Real64")
+(lock name constraints)))
+(implementation
+(value Real
+(data  0))
+(initValue Real
+(data  0))))
+(device 11 CONSTANT
+(properties
+(name "Stop Frequency")
+(variableScope cont)
+(enableEditing 1))
+(interface
+(output 1
+(name "Real64")
+(lock name constraints)))
+(implementation
+(value Real
+(data  20))
+(initValue Real
+(data  0))))
+(device 12 IODEVICE
+(properties
+(name "newInstrument (he8720a @GPIB0::16::INSTR)")
+(variableScope cont)
+(transactions 1 "WRITE TEXT \"MARK1 \", meas, \"GHZ;\" EOL"))
+(interface
+(input 1
+(name "meas")
+(optional yes)))
+(implementation
+(ioDevType 13)
+(iopath "newInstrument")))
+(device 13 CONSTANT
+(properties
+(name "Measurement Freq.")
+(variableScope cont)
+(enableEditing 1))
+(interface
+(output 1
+(name "Real64")
+(lock name constraints)))
+(implementation
+(value Real
+(data  1.88))
+(initValue Real
+(data  0))))
+(device 14 IODEVICE
+(properties
+(name "newInstrument (he8720a @GPIB0::16::INSTR)")
+(variableScope cont)
+(transactions 5 "WRITE TEXT \"SING;\" EOL" "WRITE TEXT \"CHAN1; OUTPMARK;\" EOL"
+"READ TEXT dB, x, f REAL64" "WRITE TEXT \"CHAN2; OUTPMARK;\" EOL"
+"READ TEXT phase, y, f2 REAL64"))
+(interface
+(output 1
+(name "dB")
+(optional yes))
+(output 2
+(name "x")
+(optional yes))
+(output 3
+(name "f")
+(optional yes))
+(output 4
+(name "phase")
+(optional yes))
+(output 5
+(name "y")
+(optional yes))
+(output 6
+(name "f2")
+(optional yes)))
+(implementation
+(ioDevType 13)
+(iopath "newInstrument")))
+(device 24 FORRANGE
+(properties
+(variableScope cont)
+(from -30)
+(thru 30)
+(step 10))
+(interface
+(output 1
+(name "Data")
+(lock name constraints))))
+(device 31 ESCAPE
+(properties
+(variableScope cont)
+(errorCode 1)
+(message "Turntable only went to -122"))
+(interface
+(input 1
+(name "Message")
+(tag "Message")
+(requires
+(datatype Text)
+(shape "Scalar"))
+(lock constraints)
+(optional yes)
+(buffer YES))))
+(device 32 POLARPLOT
+(properties
+(variableScope cont))
+(interface
+(input 1
+(name "Angle")
+(lock constraints))
+(input 2
+(name "dB")
+(lock constraints))
+(input 3
+(name "phase")
+(lock constraints)
+(optional yes))
+(input 4
+(type control)
+(name "Next Curve")
+(lock name constraints)
+(optional yes)))
+(implementation
+(tracePin 2)
+(tracePin 3)
+(graphMode polar)
+(autoAutoY)))
+(device 42 IODEVICE
+(properties
+(name "newInstrument3 ( @COM6)")
+(variableScope cont)
+(transactions 2 "WRITE TEXT \"TURN \", ang, \";\"" "READ TEXT pos STR"))
+(interface
+(input 1
+(name "ang")
+(optional yes))
+(output 1
+(name "pos")
+(optional yes)))
+(implementation
+(ioDevType 19)
+(visaAlias "COM6")
+(iopath "newInstrument3")))
+(device 43 FORMULA
+(properties
+(variableScope cont)
+(expr 1 "abs(asInt16(read) - sent)"))
+(interface
+(input 1
+(name "read")
+(optional yes))
+(input 2
+(name "sent")
+(optional yes))
+(output 1
+(name "Result")
+(tag "Result")
+(lock name constraints)
+(optional yes))))
+(device 44 IFTHENELSE
+(properties
+(variableScope cont)
+(cases 1 "A>=2"))
+(interface
+(input 1
+(name "A")
+(optional yes))
+(output 1
+(name "Then")
+(lock name constraints))
+(output 2
+(name "Else")
+(lock name constraints))))
+(device 46 START25
+(properties
+(variableScope cont)))
+(device 55 FORMULA
+(properties
+(variableScope cont)
+(expr 1 "\"Turntable only went to \" + A"))
+(interface
+(input 1
+(name "A")
+(optional yes))
+(output 1
+(name "Result")
+(tag "Result")
+(lock name constraints)
+(optional yes))))
+(device 56 SCROLLINGTEXTDISPLAY
+(properties
+(variableScope cont)
+(logSize 256))
+(interface
+(input 1
+(name "Data"))))
+(device 57 START25
+(properties
+(variableScope cont)))
+(device 58 SCROLLINGTEXTDISPLAY
+(properties
+(variableScope cont)
+(logSize 256))
+(interface
+(input 1
+(name "Data"))))
+(device 59 IODEVICE
+(properties
+(name "newInstrument3 ( @COM6)")
+(variableScope cont)
+(transactions 1 "READ TEXT x STR"))
+(interface
+(output 1
+(name "x")
+(optional yes)))
+(implementation
+(ioDevType 19)
+(visaAlias "COM6")
+(iopath "newInstrument3")))
+(device 60 IODEVICE
+(properties
+(name "newInstrument3 ( @COM6)")
+(variableScope cont)
+(transactions 1 "READ TEXT hello STR"))
+(interface
+(output 1
+(name "hello")
+(optional yes)))
+(implementation
+(ioDevType 19)
+(visaAlias "COM6")
+(iopath "newInstrument3")))
+(device 61 NOTE
+(properties
+(variableScope cont)
+(text2 1
+"{\\rtf1\\ansi\\ansicpg1252\\deff0\\deflang1033{\\fonttbl{\\f0\\fnil\\fcharset0 Times New Roman;}}\r\n{\\colortbl ;\\red0\\green0\\blue0;}\r\n\\viewkind4\\uc1\\pard\\cf1\\f0\\fs24 Turntable controller will send \"Alive.\" after it reboots\\par\r\n}\r\n"
+)))
+(device 62 NOTE
+(properties
+(variableScope cont)
+(text2 1
+"{\\rtf1\\ansi\\ansicpg1252\\deff0\\deflang1033{\\fonttbl{\\f0\\fnil\\fcharset0 Times New Roman;}}\r\n{\\colortbl ;\\red0\\green0\\blue0;}\r\n\\viewkind4\\uc1\\pard\\cf1\\f0\\fs24 Error out if the antenna didn\'t turn to the right angle\\par\r\n}\r\n"
+)))
+(device 63 NOTE
+(properties
+(variableScope cont)
+(text2 1
+"{\\rtf1\\ansi\\ansicpg1252\\deff0\\deflang1033{\\fonttbl{\\f0\\fnil\\fcharset0 Times New Roman;}}\r\n{\\colortbl ;\\red0\\green0\\blue0;}\r\n\\viewkind4\\uc1\\pard\\cf1\\f0\\fs24 If the controller ever gets into a weird state, can run this little graph to read out whatever\'s in the serial buffer. I think it will just reboot it anyway.\\par\r\n}\r\n"
+)))
+(device 64 NOTE
+(properties
+(variableScope cont)
+(text2 1
+"{\\rtf1\\ansi\\ansicpg1252\\deff0\\deflang1033{\\fonttbl{\\f0\\fnil\\fcharset0 Times New Roman;}}\r\n{\\colortbl ;\\red0\\green0\\blue0;}\r\n\\viewkind4\\uc1\\pard\\cf1\\f0\\fs24 Initial configuration of the 8720.\\par\r\n\\par\r\nPossible further improvements: multiple marks so that you can do radiation patterns at multiple frequencies in one pass.\\par\r\n}\r\n"
+)))
+(device 65 IODEVICE
+(properties
+(name "newInstrument3 ( @COM6)")
+(variableScope cont)
+(transactions 2 "WRITE TEXT \"SET POS \", pos, \";\""
+"WRITE TEXT \"SET NEG \", neg, \";\""))
+(interface
+(input 1
+(name "neg")
+(optional yes))
+(input 2
+(name "pos")
+(optional yes)))
+(implementation
+(ioDevType 19)
+(visaAlias "COM6")
+(iopath "newInstrument3")))
+(device 72 TOGGLE25
+(properties
+(name "Custom Cal.")
+(variableScope cont)
+(enableEditing 1))
+(interface
+(output 1
+(name "Toggle")
+(lock name constraints)))
+(implementation
+(value Int32
+(data  0))
+(initValue Int32
+(data  0))))
+(device 73 IFTHENELSE
+(properties
+(variableScope cont)
+(cases 1 "A==1"))
+(interface
+(input 1
+(name "A")
+(optional yes))
+(output 1
+(name "Then")
+(lock name constraints))
+(output 2
+(name "Else")
+(lock name constraints))))
+(device 74 CONSTANT
+(properties
+(name "-90")
+(variableScope cont)
+(enableEditing 1))
+(interface
+(output 1
+(name "Int32")
+(lock name constraints)))
+(implementation
+(value Int32
+(data  207))
+(initValue Int32
+(data  0))))
+(device 75 CONSTANT
+(properties
+(name "+90")
+(variableScope cont)
+(enableEditing 1))
+(interface
+(output 1
+(name "Int32")
+(lock name constraints)))
+(implementation
+(value Int32
+(data  792))
+(initValue Int32
+(data  0))))
+(device 76 JUNCTION
+(properties
+(name "JCT")
+(variableScope cont))
+(interface
+(input 1
+(name "A"))
+(input 2
+(name "B"))
+(output 1
+(name "Data"))))
+(configuration
+(connect D0:0 D1:0)
+(connect D1:0 D2:0)
+(connect D3:1 D2:1)
+(connect D4:1 D2:2)
+(connect D2:0 D5:0)
+(connect D6:1 D5:1)
+(connect D13:2 D7:0)
+(connect D13:1 D9:0)
+(connect D15:1 D9:1)
+(connect D8:1 D10:1)
+(connect D7:1 D10:2)
+(connect D7:4 D10:3)
+(connect D30:1 D11:0)
+(connect D8:1 D11:1)
+(connect D11:1 D12:1)
+(connect D8:1 D12:2)
+(connect D12:1 D13:1)
+(connect D11:1 D15:1)
+(connect D20:1 D16:1)
+(connect D19:1 D18:1)
+(connect D17:0 D19:0)
+(connect D14:0 D20:0)
+(connect D27:1 D25:0)
+(connect D28:1 D25:1)
+(connect D29:1 D25:2)
+(connect D20:0 D27:0)
+(connect D26:1 D27:1)
+(connect D25:0 D30:1)
+(connect D27:2 D30:2)))
+(contextCarrier
+(wndRestoredOrigin 2 2)
+(wndRestoredExtent 710 399)
+(wndState max)
+(active detail)
+(detail
+(extent 1687 899)
+(anchorPt 2483 131)
+(configuration
+(devCarrierFor 7
+(active open)
+(icon)
+(open
+(extent 47 22))
+(title off)
+(pinCenter -1650 -20))
+(devCarrierFor 8
+(active open)
+(icon
+(iconImage "io.icn"))
+(open
+(extent 274 106))
+(pinCenter -1650 100))
+(devCarrierFor 9
+(active open)
+(icon
+(iconImage "io.icn"))
+(open
+(extent 255 74))
+(terminals on)
+(pinCenter -1645 290))
+(devCarrierFor 10
+(active open)
+(icon
+(extent 93 0))
+(open
+(extent 129 29)
+(showFormat real))
+(pinCenter -1900 270))
+(devCarrierFor 11
+(active open)
+(icon
+(extent 93 0))
+(open
+(extent 129 29)
+(showFormat real))
+(pinCenter -1900 340))
+(devCarrierFor 12
+(active open)
+(icon
+(iconImage "io.icn"))
+(open
+(extent 274 106))
+(terminals on)
+(pinCenter -1630 430))
+(devCarrierFor 13
+(active open)
+(icon
+(extent 117 0))
+(open
+(extent 153 29)
+(showFormat real))
+(pinCenter -1970 420))
+(devCarrierFor 14
+(active open)
+(icon
+(iconImage "io.icn"))
+(open
+(extent 374 136))
+(terminals on)
+(pinCenter -630 850))
+(devCarrierFor 24
+(active open)
+(icon
+(iconImage "loop.icn"))
+(open
+(extent 99 79))
+(pinCenter -1050 680))
+(devCarrierFor 31
+(active open)
+(icon
+(extent 69 15))
+(open
+(extent 301 56))
+(pinCenter -160 480))
+(devCarrierFor 32
+(active open)
+(icon
+(iconImage "display.icn"))
+(open
+(extent 674 421)
+(displayMode 55)
+(graphType polar)
+(gridType grid)
+(scale 0
+(name "R name")
+(Yspacing 0)
+(Xspacing 10000)
+(scaleColor "Dark Gray")
+(show 1)
+(vspan 2))
+(trace 0 onScale 0
+(name "dB")
+(traceColor "Yellow")
+(lineType 12)
+(pointType 0))
+(trace 1 onScale 0
+(name "phase")
+(traceColor "Green")
+(lineType 12)
+(pointType 0))
+(markerColor "White"))
+(pinCenter 100 830))
+(devCarrierFor 42
+(active open)
+(icon
+(iconImage "io.icn"))
+(open
+(extent 221 74))
+(terminals on)
+(pinCenter -810 500))
+(devCarrierFor 43
+(active open)
+(icon)
+(open
+(extent 145 50))
+(terminals on)
+(pinCenter -735 640))
+(devCarrierFor 44
+(active open)
+(icon)
+(open
+(extent 58 51))
+(terminals on)
+(pinCenter -535 640))
+(devCarrierFor 46
+(active open)
+(icon)
+(open
+(extent 47 22))
+(title off)
+(pinCenter -1050 -120))
+(devCarrierFor 55
+(active icon)
+(icon
+(extent 50 15))
+(open
+(extent 145 50))
+(terminals on)
+(pinCenter -370 480))
+(devCarrierFor 56
+(active icon)
+(icon
+(extent 137 15))
+(open
+(extent 164 47)
+(noformatter))
+(pinCenter -820 -70))
+(devCarrierFor 57
+(active open)
+(icon)
+(open
+(extent 47 22))
+(title off)
+(pinCenter -390 -50))
+(devCarrierFor 58
+(active open)
+(icon)
+(open
+(extent 164 47)
+(noformatter))
+(pinCenter -150 80))
+(devCarrierFor 59
+(active open)
+(icon
+(iconImage "io.icn"))
+(open
+(extent 221 74))
+(terminals on)
+(pinCenter -390 80))
+(devCarrierFor 60
+(active open)
+(icon
+(iconImage "io.icn"))
+(open
+(extent 221 74))
+(terminals on)
+(pinCenter -1055 10))
+(devCarrierFor 61
+(active open)
+(icon
+(iconImage "notepad.icn"))
+(open
+(extent 154 76)
+(editing disabled))
+(pinCenter -820 -140))
+(devCarrierFor 62
+(active open)
+(icon
+(iconImage "notepad.icn"))
+(open
+(extent 344 46)
+(editing disabled))
+(pinCenter -160 380))
+(devCarrierFor 63
+(active open)
+(icon
+(iconImage "notepad.icn"))
+(open
+(extent 314 76)
+(editing disabled))
+(pinCenter -310 190))
+(devCarrierFor 64
+(active open)
+(icon
+(iconImage "notepad.icn"))
+(open
+(extent 214 136)
+(editing disabled))
+(pinCenter -1960 110))
+(devCarrierFor 65
+(active open)
+(icon
+(iconImage "io.icn"))
+(open
+(extent 244 86))
+(terminals on)
+(pinCenter -805 210))
+(devCarrierFor 72
+(active open)
+(icon
+(extent 75 0))
+(open
+(extent 104 24)
+(scaled off)
+(format check box))
+(title off)
+(pinCenter -1340 120))
+(devCarrierFor 73
+(active open)
+(icon)
+(open
+(extent 54 51))
+(terminals on)
+(pinCenter -1195 140))
+(devCarrierFor 74
+(active open)
+(icon
+(extent 22 0))
+(open
+(extent 67 29)
+(showFormat int))
+(pinCenter -1060 190))
+(devCarrierFor 75
+(active open)
+(icon
+(extent 25 0))
+(open
+(extent 67 29)
+(showFormat int))
+(pinCenter -1060 260))
+(devCarrierFor 76
+(active icon)
+(icon
+(extent 26 25))
+(open)
+(terminals on)
+(pinCenter -880 360))
+(connect D0:0 D1:0
+(points 2 -1650 -7 -1650 26))
+(connect D1:0 D2:0
+(points 2 -1650 155 -1650 232))
+(connect D3:1 D2:1
+(points 2 -1833 270 -1815 270))
+(connect D4:1 D2:2
+(points 4 -1833 340 -1820 340 -1820 310 -1815 310))
+(connect D2:0 D5:0
+(points 4 -1650 329 -1650 340 -1640 340 -1640 356))
+(connect D6:1 D5:1
+(points 4 -1891 420 -1870 420 -1870 430 -1820 430))
+(connect D13:2 D7:0
+(points 5 -464 650 -440 650 -440 690 -620 690 -620 761))
+(connect D13:1 D9:0
+(points 5 -464 630 -440 630 -440 410 -160 410 -160 431))
+(connect D15:1 D9:1
+(points 2 -343 480 -313 480))
+(connect D8:1 D10:1
+(points 6 -998 680 -970 680 -970 700 -430 700 -430 680 -240 680))
+(connect D7:1 D10:2
+(points 4 -391 800 -370 800 -370 780 -240 780))
+(connect D7:4 D10:3
+(points 4 -391 860 -370 860 -370 880 -240 880))
+(connect D30:1 D11:0
+(points 3 -865 360 -810 360 -810 442))
+(connect D8:1 D11:1
+(points 4 -998 680 -980 680 -980 500 -963 500))
+(connect D11:1 D12:1
+(points 6 -657 500 -640 500 -640 560 -870 560 -870 630 -850 630))
+(connect D8:1 D12:2
+(points 4 -998 680 -980 680 -980 650 -850 650))
+(connect D12:1 D13:1
+(points 2 -610 640 -597 640))
+(connect D11:1 D15:1
+(points 4 -657 500 -630 500 -630 480 -398 480))
+(connect D20:1 D16:1
+(points 6 -902 10 -880 10 -880 -50 -900 -50 -900 -70 -891 -70))
+(connect D19:1 D18:1
+(points 2 -247 80 -235 80))
+(connect D17:0 D19:0
+(points 2 -390 -37 -390 22))
+(connect D14:0 D20:0
+(points 2 -1050 -107 -1050 -48))
+(connect D27:1 D25:0
+(points 3 -1126 130 -810 130 -810 146))
+(connect D28:1 D25:1
+(points 2 -1024 190 -970 190))
+(connect D29:1 D25:2
+(points 4 -1024 260 -1000 260 -1000 230 -970 230))
+(connect D20:0 D27:0
+(points 4 -1050 49 -1050 70 -1190 70 -1190 94))
+(connect D26:1 D27:1
+(points 4 -1286 120 -1270 120 -1270 140 -1255 140))
+(connect D25:0 D30:1
+(points 5 -810 255 -810 280 -910 280 -910 350 -896 350))
+(connect D27:2 D30:2
+(points 4 -1126 150 -1120 150 -1120 370 -896 370)))
+(stackingOrder 0 1 4 3 2 17 7 13 12 8 10 11 20 16 14 21 15 9 22 18 23 24 26 25
+27 30 6 19 5 28 29))
+(numberFormats
+(realFormat standard)
+(realSigDigits 4)
+(realRadixSpec 4)
+(integerBase decimal))))
+
